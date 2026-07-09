@@ -1,2 +1,8 @@
 node_modules
 sms-backend/dist/
+.env
+.env.*
+**/.env
+**/.env.*
+sms-backend/dist/
+node_modules/
