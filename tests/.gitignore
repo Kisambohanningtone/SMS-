@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+logs/
+reports/
+uploads/
+coverage/
+*.js.map
+.DS_Store
