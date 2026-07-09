@@ -54,12 +54,12 @@
     "typescript": "^5.5.3"
   },
   "_moduleAliases": {
-    "@config": "dist/config",
-    "@controllers": "dist/controllers",
-    "@services": "dist/services",
-    "@routes": "dist/routes",
-    "@middleware": "dist/middleware",
-    "@shared-types": "dist/shared-types",
-    "@models": "dist/models"
-  }
+  "@config": "sms-backend/dist/config",
+  "@controllers": "sms-backend/dist/controllers",
+  "@services": "sms-backend/dist/services",
+  "@routes": "sms-backend/dist/routes",
+  "@middleware": "sms-backend/dist/middleware",
+  "@shared-types": "sms-backend/dist/shared-types",
+  "@models": "sms-backend/dist/models"
+}
 }
