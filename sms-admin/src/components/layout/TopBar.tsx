@@ -1,6 +1,4 @@
 import { useLocation } from 'react-router-dom'
-import { Bell, Search } from 'lucide-react'
-import { useAuthStore } from '../../hooks/useAuth'
 import { useState, useEffect } from 'react'
 
 const titles: Record<string, { title: string; subtitle: string }> = {

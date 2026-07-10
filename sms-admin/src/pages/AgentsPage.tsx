@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Loader2, Building2, TrendingUp, DollarSign, UserX,
-  UserCheck, ChevronDown, ChevronUp, Search, X, KeyRound, Eye
-} from 'lucide-react'
+  UserCheck, Search, X, KeyRound, Eye
+, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { adminApi, type AgentRow, type AgentProfile } from '../api/admin'
+import { adminApi, type AgentRow } from '../api/admin'
 
 // ── Deactivate Modal ──────────────────────────────────────────────────────────
 function DeactivateModal({ agent, onClose }: { agent: AgentRow; onClose: () => void }) {

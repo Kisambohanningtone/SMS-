@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Users, Loader2, Building2, Search, CheckCircle2, XCircle, Trash2 } from 'lucide-react'
+import { Users, Loader2, Search, CheckCircle2, XCircle, Trash2 } from 'lucide-react'
 import { adminApi } from '../api/admin'
 
 

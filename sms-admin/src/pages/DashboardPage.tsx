@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-  Users, Building2, Home, TrendingUp, DollarSign,
-  Loader2, UserX, CreditCard, Activity, ArrowUpRight
+  Users, Building2, Home, DollarSign,
+  Loader2, UserX, CreditCard
 } from 'lucide-react'
 import { adminApi, type ActivityEvent, type RecentPayment } from '../api/admin'
 
@@ -13,7 +13,7 @@ const METHOD_LABELS: Record<string, string> = {
   mpesa_stk: 'STK Push', paybill: 'Paybill', cash: 'Cash', bank: 'Bank',
 }
 
-function StatCard({ icon: Icon, label, value, sub, accent }: {
+function StatCard({ icon: _Icon, label, value, sub, accent }: {
   icon: any; label: string; value: string | number; sub?: string; accent: string
 }) {
   return (
