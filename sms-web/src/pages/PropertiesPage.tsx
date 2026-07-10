@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   Building2, ArrowLeft, Phone, Loader2, Send,
-  CheckCircle2, XCircle, Clock, Home, AlertCircle, RefreshCw, Trash2
+  CheckCircle2, XCircle, Clock, Home, RefreshCw, Trash2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { propertiesApi, type UnitStatus } from '../api/properties'
@@ -27,7 +27,7 @@ function StkModal({ unit, onClose }: { unit: UnitStatus; onClose: () => void }) 
   const [amount, setAmount] = useState(String(unit.rent_due))
   const [phone, setPhone] = useState(unit.tenant?.phone ?? '')
   const [polling, setPolling] = useState(false)
-  const [checkoutId, setCheckoutId] = useState('')
+  const [, setCheckoutId] = useState<string | null>(null)
   const [stkStatus, setStkStatus] = useState<string>('')
 
   const push = useMutation({

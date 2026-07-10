@@ -274,6 +274,7 @@ function MonthGroup({ label, payments, defaultOpen }: { label: string; payments:
                       <button
                         onClick={() => {
                           if (window.confirm('Permanently delete this voided payment?')) {
+                            const queryClient = useQueryClient()
                             paymentsApi.delete(p.id).then(() => queryClient.invalidateQueries({ queryKey: ['payments'] }))
                           }
                         }}

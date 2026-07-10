@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, Send, Loader2, AlertCircle, CheckCircle2, XCircle, Clock, RefreshCw, MessageCircle, Trash2 } from 'lucide-react'
+import { Bell, Send, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, MessageCircle, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { propertiesApi } from '../api/properties'
 import { remindersApi, type ReminderLogEntry } from '../api/reminders'
@@ -141,14 +141,6 @@ export function RemindersPage() {
     onError: (err: any) => toast.error(err.response?.data?.message ?? 'Failed to send bulk reminders'),
   })
 
-  const clearAll = useMutation({
-    mutationFn: () => remindersApi.clearAllLogs(),
-    onSuccess: () => {
-      toast.success('All reminder logs cleared')
-      queryClient.invalidateQueries({ queryKey: ['reminder-logs'] })
-    },
-    onError: (err: any) => toast.error(err.response?.data?.message ?? 'Failed to clear logs'),
-  })
   const retry = useMutation({
     mutationFn: (logId: string) => remindersApi.retry(logId),
     onSuccess: () => {

@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { X, ChevronRight, ChevronLeft, Plus, Trash2, Loader2, Check, Building2, User, Home } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { ownersApi, type Owner } from '../api/owners'
 import { propertiesApi } from '../api/properties'
 import { rentApi } from '../api/rent'
+import { ownersApi, type Owner } from '../api/owners'
 
 interface RentTierDraft {
   name: string
@@ -183,7 +183,7 @@ export function AddPropertyWizard({ onClose }: { onClose: () => void }) {
                   ) : (
                     <select className="input" value={selectedOwnerId} onChange={e => setSelectedOwnerId(e.target.value)}>
                       <option value="">Choose an owner...</option>
-                      {owners.map(o => (
+                      {owners.map((o: Owner) => (
                         <option key={o.id} value={o.id}>{o.full_name} — {o.phone}</option>
                       ))}
                     </select>

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Building2, Home, Users, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+import { Building2, Home, Users, TrendingUp } from 'lucide-react'
 import { propertiesApi } from '../api/properties'
 import { paymentsApi } from '../api/payments'
 import { useAuthStore } from '../hooks/useAuth'

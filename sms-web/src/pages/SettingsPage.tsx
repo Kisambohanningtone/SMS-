@@ -1,6 +1,6 @@
+import { Loader2, Building2, Save, Bell, Percent } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Settings, Building2, Bell, Percent, Loader2, Save, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { agentApi, type ReminderSchedule } from '../api/agent'
 
