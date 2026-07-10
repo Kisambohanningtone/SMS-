@@ -37,3 +37,23 @@ function createSequelize(): Sequelize {
 }
 
 export const sequelize = createSequelize()
+
+export async function connectDatabase(): Promise<void> {
+  try {
+    await sequelize.authenticate()
+    logger.info('Database connected successfully')
+  } catch (error) {
+    logger.error('Database connection failed:', error)
+    throw error
+  }
+}
+
+export async function syncDatabase(): Promise<void> {
+  try {
+    await sequelize.sync()
+    logger.info('Database synchronized')
+  } catch (error) {
+    logger.error('Database sync failed:', error)
+    throw error
+  }
+}

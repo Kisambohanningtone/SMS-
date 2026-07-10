@@ -58,3 +58,16 @@ export async function redisGetJson<T>(key: string): Promise<T | null> {
   if (!raw) return null
   try { return JSON.parse(raw) as T } catch { return null }
 }
+export const REDIS_KEYS = {
+  darajaToken: 'daraja_token',
+  kopokopoToken: 'kopokopo_token',
+
+  stkRequest: (checkoutRequestId: string) =>
+    `stk_request:${checkoutRequestId}`,
+
+  session: (id: string) =>
+    `session:${id}`,
+
+  user: (id: string) =>
+    `user:${id}`,
+}
