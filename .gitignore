@@ -1,8 +1,39 @@
-node_modules
-sms-backend/dist/
-.env
-.env.*
-**/.env
-**/.env.*
-sms-backend/dist/
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Build output — never commit compiled JS
+sms-backend/dist/
+dist/
+
+# Environment files — NEVER commit
+.env
+**/.env
+.env.local
+.env.production
+
+# Expo
+.expo/
+**/.expo/
+
+# Reports (generated PDFs)
+reports/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Test coverage
+coverage/
+
+# Backup folders — not needed on GitHub
+sms-web-backup/
+sms-mobile-screens-backup/

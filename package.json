@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --exit-child -r tsconfig-paths/register sms-backend/server.ts",
     "build": "tsc --project tsconfig.json",
-    "start": "node -r module-alias/register sms-backend/dist/server.js",
+    "start": "node sms-backend/dist/server.js",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
   },
@@ -54,12 +54,12 @@
     "typescript": "^5.5.3"
   },
   "_moduleAliases": {
-  "@config": "sms-backend/dist/config",
-  "@controllers": "sms-backend/dist/controllers",
-  "@services": "sms-backend/dist/services",
-  "@routes": "sms-backend/dist/routes",
-  "@middleware": "sms-backend/dist/middleware",
-  "@shared-types": "sms-backend/dist/shared-types",
-  "@models": "sms-backend/dist/models"
-}
+    "@config": "sms-backend/dist/config",
+    "@controllers": "sms-backend/dist/controllers",
+    "@services": "sms-backend/dist/services",
+    "@routes": "sms-backend/dist/routes",
+    "@middleware": "sms-backend/dist/middleware",
+    "@shared-types": "sms-backend/dist/shared-types",
+    "@models": "sms-backend/dist/models"
+  }
 }

@@ -1,42 +1,39 @@
+import 'reflect-metadata'
 import { Sequelize } from 'sequelize-typescript'
-import { env } from './env'
 import { logger } from './logger'
+import path from 'path'
 
-export const sequelize = new Sequelize({
-  dialect: 'postgres',
-  host: env.db.host,
-  port: env.db.port,
-  database: env.db.name,
-  username: env.db.user,
-  password: env.db.password,
-  logging: env.app.isDev ? (sql: string) => logger.debug(sql) : false,
-  dialectOptions: env.db.ssl
-    ? { ssl: { require: true, rejectUnauthorized: false } }
-    : {},
-  pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
-  define: {
-    timestamps: true,
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
-  models: [],
-})
+const modelsPath = path.join(__dirname, '..', 'models')
 
-export async function connectDatabase(): Promise<void> {
-  try {
-    await sequelize.authenticate()
-    logger.info(`Database connected — ${env.db.name}@${env.db.host}:${env.db.port}`)
-  } catch (error) {
-    logger.error('Database connection failed:', error)
-    process.exit(1)
+function createSequelize(): Sequelize {
+  // Render provides DATABASE_URL — local dev uses individual vars
+  const databaseUrl = process.env.DATABASE_URL
+
+  if (databaseUrl) {
+    logger.info('DB: connecting via DATABASE_URL (Render)')
+    return new Sequelize(databaseUrl, {
+      dialect: 'postgres',
+      models: [modelsPath],
+      logging: false,
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false },
+      },
+      pool: { max: 5, min: 1, acquire: 30000, idle: 10000 },
+    })
   }
+
+  logger.info('DB: connecting via DB_HOST (local dev)')
+  return new Sequelize({
+    dialect: 'postgres',
+    host:     process.env.DB_HOST     ?? 'localhost',
+    port:     Number(process.env.DB_PORT ?? 5432),
+    database: process.env.DB_NAME     ?? 'sms_agent_db',
+    username: process.env.DB_USER     ?? 'postgres',
+    password: process.env.DB_PASSWORD ?? '',
+    models: [modelsPath],
+    logging: (sql) => logger.debug(sql),
+    pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
+  })
 }
 
-export async function syncDatabase(force = false): Promise<void> {
-  if (env.app.isProd && force) {
-    throw new Error('Cannot force sync in production — run migrations instead')
-  }
-  await sequelize.sync({ force, alter: !force && env.app.isDev })
-  logger.info('Database synced')
-}
+export const sequelize = createSequelize()

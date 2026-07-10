@@ -1,37 +1,40 @@
 import { createClient, RedisClientType } from 'redis'
-import { env } from './env'
 import { logger } from './logger'
 
 let client: RedisClientType
 
 export async function connectRedis(): Promise<void> {
-  client = createClient({
-    socket: {
-      host: env.redis.host,
-      port: env.redis.port,
-    },
-    password: env.redis.password || undefined,
-  }) as RedisClientType
+  const redisUrl = process.env.REDIS_URL
+
+  if (redisUrl) {
+    logger.info('Redis: connecting via REDIS_URL (Render)')
+    client = createClient({ url: redisUrl }) as RedisClientType
+  } else {
+    logger.info('Redis: connecting via REDIS_HOST (local dev)')
+    client = createClient({
+      socket: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: Number(process.env.REDIS_PORT ?? 6379),
+      },
+      password: process.env.REDIS_PASSWORD || undefined,
+    }) as RedisClientType
+  }
 
   client.on('error', (err) => logger.error('Redis error:', err))
-  client.on('connect', () => logger.info(`Redis connected — ${env.redis.host}:${env.redis.port}`))
-  client.on('reconnecting', () => logger.warn('Redis reconnecting...'))
+  client.on('connect', () => logger.info('Redis connected'))
 
   await client.connect()
 }
 
 export function getRedis(): RedisClientType {
-  if (!client) throw new Error('Redis not initialised — call connectRedis() first')
+  if (!client) throw new Error('Redis not initialised')
   return client
 }
 
 export async function redisSet(key: string, value: string, ttlSeconds?: number): Promise<void> {
-  const redis = getRedis()
-  if (ttlSeconds) {
-    await redis.setEx(key, ttlSeconds, value)
-  } else {
-    await redis.set(key, value)
-  }
+  ttlSeconds
+    ? await getRedis().setEx(key, ttlSeconds, value)
+    : await getRedis().set(key, value)
 }
 
 export async function redisGet(key: string): Promise<string | null> {
@@ -43,8 +46,7 @@ export async function redisDel(key: string): Promise<void> {
 }
 
 export async function redisExists(key: string): Promise<boolean> {
-  const result = await getRedis().exists(key)
-  return result === 1
+  return (await getRedis().exists(key)) === 1
 }
 
 export async function redisSetJson<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
@@ -54,18 +56,5 @@ export async function redisSetJson<T>(key: string, value: T, ttlSeconds?: number
 export async function redisGetJson<T>(key: string): Promise<T | null> {
   const raw = await redisGet(key)
   if (!raw) return null
-  try {
-    return JSON.parse(raw) as T
-  } catch {
-    return null
-  }
-}
-
-export const REDIS_KEYS = {
-  darajaToken: 'daraja:oauth_token',
-  kopokopoToken: 'kopokopo:oauth_token',
-  stkRequest: (checkoutId: string) => `stk:request:${checkoutId}`,
-  paymentIdempotency: (transactionId: string) => `payment:idempotency:${transactionId}`,
-  refreshToken: (userId: string) => `auth:refresh:${userId}`,
-  rateLimitAgent: (agentId: string) => `rate:agent:${agentId}`,
+  try { return JSON.parse(raw) as T } catch { return null }
 }
