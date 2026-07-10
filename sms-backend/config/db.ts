@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import 'reflect-metadata'
 import { Sequelize } from 'sequelize-typescript'
 import { logger } from './logger'
@@ -13,7 +16,7 @@ function createSequelize(): Sequelize {
     logger.info('DB: connecting via DATABASE_URL (Render)')
     return new Sequelize(databaseUrl, {
       dialect: 'postgres',
-      models: [modelsPath],
+      models: [],
       logging: false,
       dialectOptions: {
         ssl: { require: true, rejectUnauthorized: false },
@@ -30,7 +33,7 @@ function createSequelize(): Sequelize {
     database: process.env.DB_NAME     ?? 'sms_agent_db',
     username: process.env.DB_USER     ?? 'postgres',
     password: process.env.DB_PASSWORD ?? '',
-    models: [modelsPath],
+    models: [],
     logging: (sql) => logger.debug(sql),
     pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
   })

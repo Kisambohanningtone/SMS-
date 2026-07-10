@@ -1,7 +1,13 @@
+import 'module-alias/register';
 import 'reflect-metadata'
 import 'tsconfig-paths/register'
-import '@models/index'
-import { connectDatabase, syncDatabase } from '@config/db'
+import './models'
+import {
+  connectDatabase,
+  syncDatabase,
+  sequelize
+} from './config/db'
+
 import { connectRedis } from '@config/redis'
 import { env } from '@config/env'
 import { logger } from '@config/logger'
@@ -12,7 +18,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import app from './app';
-import { sequelize } from './config/db';
 
 async function bootstrap(): Promise<void> {
   logger.info(`Starting SMS Backend [${env.app.nodeEnv}]`)
