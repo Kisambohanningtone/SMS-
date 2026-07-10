@@ -10,7 +10,6 @@
     "allowSyntheticDefaultImports": true,
 
     "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
 
     "declaration": true,
