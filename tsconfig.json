@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "ignoreDeprecations": "6.0",
     "lib": ["ES2020"],
     "outDir": "./sms-backend/dist",
     "rootDir": "./sms-backend",
