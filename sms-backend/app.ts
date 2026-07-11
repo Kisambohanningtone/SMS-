@@ -32,7 +32,14 @@ app.set('trust proxy', 1) // Required for Render/Cloudflare — enables correct 
 // ── Security ────────────────────────────────────────────────────────────────
 app.use(helmet())
 app.use(cors({
-  origin: [env.cors.frontendUrl, env.cors.adminUrl],
+  origin: (origin, callback) => {
+    const allowed = [env.cors.frontendUrl, env.cors.adminUrl, 'http://localhost:5173', 'http://localhost:5174']
+    if (!origin || allowed.includes(origin) || origin.endsWith('.onrender.com')) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
 }))
 
