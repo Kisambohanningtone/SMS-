@@ -53,7 +53,7 @@ export async function connectDatabase(): Promise<void> {
 
 export async function syncDatabase(): Promise<void> {
   try {
-    await sequelize.sync()
+    await sequelize.sync({ alter: true })
     logger.info('Database synchronized')
   } catch (error) {
     logger.error('Database sync failed:', error)
