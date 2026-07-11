@@ -27,6 +27,7 @@ import tenantAuthRoutes from '@routes/tenantAuth.routes'
 import ownerAuthRoutes from '@routes/ownerAuth.routes'
 
 const app = express()
+app.set('trust proxy', 1) // Required for Render/Cloudflare — enables correct IP detection behind proxy
 
 // ── Security ────────────────────────────────────────────────────────────────
 app.use(helmet())
