@@ -26,10 +26,8 @@ async function bootstrap(): Promise<void> {
   await connectDatabase()
   await connectRedis()
 
-  // ── Sync DB schema in development (use migrations in production) ─────────
-  if (env.app.isDev) {
-    await syncDatabase()
-  }
+  // ── Sync DB schema (alter: true keeps columns in sync across deploys) ──────
+  await syncDatabase()
 
   // ── Start cron jobs ──────────────────────────────────────────────────────
   startReminderCron()   // Daily 08:00 Nairobi — send overdue reminders
