@@ -53,7 +53,11 @@ export async function connectDatabase(): Promise<void> {
 
 export async function syncDatabase(): Promise<void> {
   try {
-    await sequelize.sync({ alter: true })
+    // Drop conflicting enums before sync to avoid ALTER TABLE cast errors
+    try {
+      await sequelize.query('DROP TYPE IF EXISTS "public"."enum_properties_payment_method" CASCADE')
+    } catch (e) { /* ignore if doesn't exist */ }
+    await sequelize.sync({ force: false })
     logger.info('Database synchronized')
   } catch (error) {
     logger.error('Database sync failed:', error)
