@@ -2,7 +2,7 @@ import axios from 'axios'
 import * as SecureStore from 'expo-secure-store'
 
 const api = axios.create({
-  baseURL: 'http://192.168.88.14:5000',
+  baseURL: 'https://sms-backend-5rw8.onrender.com',
   timeout: 15000,
 })
 

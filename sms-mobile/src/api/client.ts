@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 
 // IMPORTANT: replace with your computer's LAN IP when testing on a real phone
 // (localhost won't work from a physical device — find it with `ipconfig` on Windows)
-const API_BASE_URL = 'http://192.168.88.14:5000'
+const API_BASE_URL = 'https://sms-backend-5rw8.onrender.com'
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

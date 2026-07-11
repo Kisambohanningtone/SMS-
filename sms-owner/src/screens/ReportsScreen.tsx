@@ -23,7 +23,7 @@ export default function ReportsScreen() {
   }, [refetch])
 
   function openReport(token: string) {
-    const url = `http://192.168.88.14:5000/owner/report/${token}`
+    const url = `https://sms-backend-5rw8.onrender.com/owner/report/${token}`
     Linking.openURL(url)
   }
 
