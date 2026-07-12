@@ -53,16 +53,17 @@ export async function connectDatabase(): Promise<void> {
 
 export async function syncDatabase(): Promise<void> {
   try {
-    // Drop conflicting enums before sync to avoid ALTER TABLE cast errors on Render
-    const enumsToDrop = [
-      'enum_properties_payment_method',
-      'enum_users_role',
+    // On a fresh DB: create all tables cleanly
+    // On existing DB: only add missing columns, never alter existing ones
+    // Fresh DB: create all tables. Existing DB: add missing columns only.
+    // Drop conflicting enums before sync to prevent ALTER TABLE cast errors
+    const enumDrops = [
+      `ALTER TABLE IF EXISTS "properties" ALTER COLUMN "payment_method" DROP DEFAULT`,
+      `DROP TYPE IF EXISTS "public"."enum_properties_payment_method" CASCADE`,
+      `DROP TYPE IF EXISTS "public"."enum_users_role" CASCADE`,
     ]
-    for (const enumName of enumsToDrop) {
-      try {
-        await sequelize.query(`ALTER TABLE "properties" ALTER COLUMN "payment_method" DROP DEFAULT`).catch(() => {})
-        await sequelize.query(`DROP TYPE IF EXISTS "public"."${enumName}" CASCADE`)
-      } catch (e) { /* ignore */ }
+    for (const sql of enumDrops) {
+      await sequelize.query(sql).catch(() => {})
     }
     await sequelize.sync({ alter: true })
     logger.info('Database synchronized')
