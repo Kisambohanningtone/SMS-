@@ -53,11 +53,18 @@ export async function connectDatabase(): Promise<void> {
 
 export async function syncDatabase(): Promise<void> {
   try {
-    // Drop conflicting enums before sync to avoid ALTER TABLE cast errors
-    try {
-      await sequelize.query('DROP TYPE IF EXISTS "public"."enum_properties_payment_method" CASCADE')
-    } catch (e) { /* ignore if doesn't exist */ }
-    await sequelize.sync({ force: false })
+    // Drop conflicting enums before sync to avoid ALTER TABLE cast errors on Render
+    const enumsToDrop = [
+      'enum_properties_payment_method',
+      'enum_users_role',
+    ]
+    for (const enumName of enumsToDrop) {
+      try {
+        await sequelize.query(`ALTER TABLE "properties" ALTER COLUMN "payment_method" DROP DEFAULT`).catch(() => {})
+        await sequelize.query(`DROP TYPE IF EXISTS "public"."${enumName}" CASCADE`)
+      } catch (e) { /* ignore */ }
+    }
+    await sequelize.sync({ alter: true })
     logger.info('Database synchronized')
   } catch (error) {
     logger.error('Database sync failed:', error)
