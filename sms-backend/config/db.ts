@@ -53,19 +53,39 @@ export async function connectDatabase(): Promise<void> {
 
 export async function syncDatabase(): Promise<void> {
   try {
-    // On a fresh DB: create all tables cleanly
-    // On existing DB: only add missing columns, never alter existing ones
-    // Fresh DB: create all tables. Existing DB: add missing columns only.
-    // Drop conflicting enums before sync to prevent ALTER TABLE cast errors
-    const enumDrops = [
-      `ALTER TABLE IF EXISTS "properties" ALTER COLUMN "payment_method" DROP DEFAULT`,
-      `DROP TYPE IF EXISTS "public"."enum_properties_payment_method" CASCADE`,
-      `DROP TYPE IF EXISTS "public"."enum_users_role" CASCADE`,
+    // Step 1: Drop conflicting enums that block ALTER TABLE on Render
+    const preSyncSql = [
+      'ALTER TABLE IF EXISTS "properties" ALTER COLUMN "payment_method" DROP DEFAULT',
+      'DROP TYPE IF EXISTS "public"."enum_properties_payment_method" CASCADE',
+      'DROP TYPE IF EXISTS "public"."enum_users_role" CASCADE',
     ]
-    for (const sql of enumDrops) {
+    for (const sql of preSyncSql) {
       await sequelize.query(sql).catch(() => {})
     }
-    await sequelize.sync({ alter: true })
+
+    // Step 2: Create missing tables safely — never drops existing data
+    await sequelize.sync({ force: false })
+
+    // Step 3: Add columns that Sequelize missed due to NOT NULL constraints
+    const patches = [
+      `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "role" VARCHAR(20) DEFAULT 'agent'`,
+      `ALTER TABLE IF EXISTS "tenants" ADD COLUMN IF NOT EXISTS "password_hash" VARCHAR(255)`,
+      `ALTER TABLE IF EXISTS "tenants" ADD COLUMN IF NOT EXISTS "must_change_password" BOOLEAN DEFAULT true`,
+      `ALTER TABLE IF EXISTS "tenants" ADD COLUMN IF NOT EXISTS "last_login_at" TIMESTAMPTZ`,
+      `ALTER TABLE IF EXISTS "owners" ADD COLUMN IF NOT EXISTS "password_hash" VARCHAR(255)`,
+      `ALTER TABLE IF EXISTS "owners" ADD COLUMN IF NOT EXISTS "must_change_password" BOOLEAN DEFAULT true`,
+      `ALTER TABLE IF EXISTS "owners" ADD COLUMN IF NOT EXISTS "last_login_at" TIMESTAMPTZ`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "is_voided" BOOLEAN DEFAULT false`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "void_reason" VARCHAR(255)`,
+      `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "deactivation_reason" TEXT`,
+      `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "deactivated_by" UUID`,
+      `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "deactivated_at" TIMESTAMPTZ`,
+      `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "last_login_at" TIMESTAMPTZ`,
+    ]
+    for (const sql of patches) {
+      await sequelize.query(sql).catch((e: any) => logger.warn('Patch skipped: ' + e.message))
+    }
+
     logger.info('Database synchronized')
   } catch (error) {
     logger.error('Database sync failed:', error)
