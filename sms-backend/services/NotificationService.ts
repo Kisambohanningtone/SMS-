@@ -48,7 +48,10 @@ export class NotificationService {
           username: env.africastalking.username,
           to: phone,
           message,
-          ...(env.africastalking.senderId ? { from: env.africastalking.senderId } : {}),
+          // Sender ID only works in production — sandbox ignores/rejects it
+          ...(env.africastalking.senderId && env.africastalking.username !== 'sandbox'
+            ? { from: env.africastalking.senderId }
+            : {}),
         }),
         {
           headers: {
@@ -65,8 +68,12 @@ export class NotificationService {
       logger.debug(`AT SMS raw response: ${JSON.stringify(data)}`)
       logger.debug(`AT recipient: ${JSON.stringify(recipient)}`)
 
+      // Log full response for debugging
+      logger.info('AT SMS raw response: ' + JSON.stringify(data))
       if (!recipient || recipient.status !== 'Success') {
-        throw new Error(recipient?.status ?? 'Unknown SMS error')
+        const errMsg = recipient?.status ?? data?.SMSMessageData?.Message ?? 'Unknown SMS error'
+        logger.error('AT SMS failed — recipient: ' + JSON.stringify(recipient) + ' full: ' + JSON.stringify(data))
+        throw new Error(errMsg)
       }
 
       logger.info(`SMS sent to ${phone} — messageId: ${recipient.messageId}`)
