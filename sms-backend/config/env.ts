@@ -104,6 +104,7 @@ export const env = {
 
   // KopoKopo kept for reference — replaced by Daraja C2B Paybill
   kopokopo: {
+    walternTillNumber: process.env.KOPOKOPO_WALTERN_TILL ?? '247247',
     clientId: optional('KOPOKOPO_CLIENT_ID', ''),
     clientSecret: optional('KOPOKOPO_CLIENT_SECRET', ''),
     baseUrl: optional('KOPOKOPO_BASE_URL', 'https://sandbox.kopokopo.com'),

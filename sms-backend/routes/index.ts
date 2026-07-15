@@ -13,6 +13,7 @@ import reminderRoutes from './reminder.routes'
 import reportRoutes from './report.routes'
 import webhookRoutes from './webhook.routes'
 import healthRoutes from './health'
+import kopokopoRoutes from './kopokopo.routes'
 import rentRoutes from './rent.routes'
 
 const router = Router()
@@ -23,6 +24,7 @@ router.use('/api/auth', authLimiter, authRoutes)
 
 // ── Webhooks (no session auth — handlers verify their own signatures) ──────────
 router.use('/webhooks', webhookRoutes)
+router.use('/api/kopokopo', kopokopoRoutes)
 
 // ── Owner portal (public token-gated) ────────────────────────────────────────
 router.use('/owner/report', reportRoutes)

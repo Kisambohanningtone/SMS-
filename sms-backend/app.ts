@@ -21,6 +21,7 @@ import reminderRoutes from '@routes/reminder.routes'
 import reportRoutes from '@routes/report.routes'
 import webhookRoutes from '@routes/webhook.routes'
 import c2bRoutes from '@routes/c2b.routes'
+import kopokopoRoutes from '@routes/kopokopo.routes'
 import adminRoutes from '@routes/admin.routes'
 import rentRoutes from '@routes/rent.routes'
 import tenantAuthRoutes from '@routes/tenantAuth.routes'
@@ -92,6 +93,7 @@ app.use('/owner/report', reportRoutes)
 // Webhooks (no API auth — webhook controllers handle their own verification)
 app.use('/webhooks', webhookRoutes)
 app.use('/webhooks/c2b', c2bRoutes)
+app.use('/webhooks/kopokopo', kopokopoRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api', rentRoutes)
 
