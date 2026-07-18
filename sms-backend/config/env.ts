@@ -117,6 +117,9 @@ export const env = {
     level: optional('LOG_LEVEL', 'debug'),
     dir: optional('LOG_DIR', './logs'),
   },
+  intasend: {
+    apiKey: optional('INTASEND_API_KEY', ''),
+    publishableKey: optional('INTASEND_PUBLISHABLE_KEY', ''),
+    sandbox: optional('INTASEND_SANDBOX', 'true') === 'true',
+  }
 }
-
-export type Env = typeof env

@@ -15,4 +15,16 @@ router.post('/daraja/stk', ctrl.darajaStk)
 router.post('/daraja/b2c/result', ctrl.darajaB2cResult)
 router.post('/daraja/b2c/timeout', ctrl.darajaB2cTimeout)
 
+// IntaSend payout webhook — fires when disbursement completes or fails
+router.post('/intasend/payout', async (req, res) => {
+  res.json({ status: 'received' }) // respond immediately
+  try {
+    const { IntaSendService } = await import('@services/IntaSendService')
+    await new IntaSendService().handleWebhook(req.body)
+  } catch (err: any) {
+    const { logger } = await import('@config/logger')
+    logger.error('IntaSend webhook error:', err)
+  }
+})
+
 export default router

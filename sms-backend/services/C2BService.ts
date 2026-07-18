@@ -5,6 +5,7 @@ import { AppError } from '@middleware/errorHandler'
 import { Payment, Unit, Property, Tenant, Agent } from '@models/index'
 import { PaymentMethod } from '@models/Payment'
 import { calculateWalternFee } from './PaymentService'
+import { IntaSendService } from './IntaSendService'
 
 /**
  * C2BService — Safaricom Daraja C2B (Customer to Business) Paybill integration.
@@ -120,7 +121,7 @@ export class C2BService {
     const now = new Date()
     const waltern_fee = calculateWalternFee(amount)
 
-    await Payment.create({
+    const newPayment = await Payment.create({
       unit_id: unit.id,
       tenant_id: tenant?.id ?? null,
       property_id: unit.property_id,
@@ -141,6 +142,12 @@ export class C2BService {
       `C2B payment recorded — unit: ${unit.unit_number}, amount: KES ${amount}, ` +
       `waltern_fee: KES ${waltern_fee}, agent_amount: KES ${amount - waltern_fee}, ` +
       `TransID: ${TransID}, payer: ${FirstName} ${LastName} (${MSISDN})`
+    )
+
+    // Fire IntaSend disbursement async — do not await (5s Safaricom rule)
+    const intasend = new IntaSendService()
+    intasend.disburseToAgent(newPayment.id).catch((err) =>
+      logger.error(`IntaSend async disburse failed for payment ${newPayment.id}:`, err)
     )
   }
 

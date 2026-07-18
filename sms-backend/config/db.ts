@@ -81,6 +81,10 @@ export async function syncDatabase(): Promise<void> {
       `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "deactivated_by" UUID`,
       `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "deactivated_at" TIMESTAMPTZ`,
       `ALTER TABLE IF EXISTS "users" ADD COLUMN IF NOT EXISTS "last_login_at" TIMESTAMPTZ`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "b2c_status" VARCHAR(20) DEFAULT 'pending'`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "intasend_ref" VARCHAR(100)`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "b2c_attempts" INTEGER DEFAULT 0`,
+      `ALTER TABLE IF EXISTS "payments" ADD COLUMN IF NOT EXISTS "b2c_last_attempt_at" TIMESTAMPTZ`,
     ]
     for (const sql of patches) {
       await sequelize.query(sql).catch((e: any) => logger.warn('Patch skipped: ' + e.message))

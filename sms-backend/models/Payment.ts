@@ -108,6 +108,22 @@ export class Payment extends Model {
   @Column(DataType.DATE)
   declare voided_at: Date | null
 
+  // IntaSend disbursement tracking
+  @Default('pending')
+  @Column(DataType.STRING(20))
+  declare b2c_status: string
+
+  @Column(DataType.STRING(100))
+  declare intasend_ref: string | null
+
+  @Default(0)
+  @Column(DataType.INTEGER)
+  declare b2c_attempts: number
+
+  @Column(DataType.DATE)
+  declare b2c_last_attempt_at: Date | null
+
+
   @CreatedAt
   declare created_at: Date
 

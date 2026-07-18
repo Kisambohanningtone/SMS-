@@ -13,6 +13,7 @@ import { env } from '@config/env'
 import { logger } from '@config/logger'
 import { startReminderCron } from './jobs/reminderCron'
 import { startReportCron } from './jobs/reportCron'
+import { startB2CRetryCron } from './jobs/b2cRetryCron'
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -30,7 +31,9 @@ async function bootstrap(): Promise<void> {
   await syncDatabase()
 
   // ── Start cron jobs ──────────────────────────────────────────────────────
-  startReminderCron()   // Daily 08:00 Nairobi — send overdue reminders
+  startReminderCron()
+  startReportCron()
+  startB2CRetryCron()   // Daily 08:00 Nairobi — send overdue reminders
   startReportCron()     // Monthly on agent's chosen day — generate + send owner statements
 
   // ── Start HTTP server ────────────────────────────────────────────────────
