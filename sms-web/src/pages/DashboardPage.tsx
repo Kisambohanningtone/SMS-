@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Building2, TrendingUp, Wallet, Users, ArrowRight, Loader2, RefreshCw } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../hooks/useAuth'
 import { paymentsApi } from '../api/payments'
 import { propertiesApi } from '../api/properties'
 
@@ -22,8 +22,8 @@ const monthStr = () => {
 }
 
 // ─── DONUT ─────────────────────────────────────────────────────────────────
-function DonutChart({ paid, partial, overdue, vacant, total }: {
-  paid: number; partial: number; overdue: number; vacant: number; total: number
+function DonutChart({ paid, partial, overdue, total }: {
+  paid: number; partial: number; overdue: number; total: number
 }) {
   const r    = 38
   const circ = 2 * Math.PI * r
@@ -64,8 +64,7 @@ function PropertyCard({ p }: { p: any }) {
   const units    = p.units ?? []
   const total    = units.length || p.totalUnits || 0
   const occupied = p.occupiedUnits ?? 0
-  const vacant   = total - occupied
-
+  
   return (
     <Link to={`/properties/${p.id}`}>
       <div className="bg-white border border-slate-200 rounded-xl p-4 mb-3 hover:border-blue-400 hover:shadow-md transition-all duration-150 cursor-pointer">
@@ -83,7 +82,7 @@ function PropertyCard({ p }: { p: any }) {
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[
             { val: occupied, label: 'Occupied', color: '#166534' },
-            { val: vacant,   label: 'Vacant',   color: '#475569' },
+            { val: (p.totalUnits ?? 0) - (p.occupiedUnits ?? 0), label: 'Vacant', color: '#475569' },
             { val: p.defaultRent ? kes(p.defaultRent) : '—', label: 'Rent/unit', color: '#1D4ED8' },
           ].map(({ val, label, color: c }) => (
             <div key={label} className="text-center bg-slate-50 rounded-lg py-2">
@@ -116,7 +115,7 @@ function PropertyCard({ p }: { p: any }) {
 
 // ─── PAGE ──────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { user } = useAuth()
+  useAuthStore()
   const ms = monthStr()
 
   const { data: sumRes, isLoading: sumLoading, refetch } = useQuery({
@@ -146,8 +145,7 @@ export default function DashboardPage() {
   const walternFee     = summary?.financials?.waltern_fee       ?? 0
   const paidUnits      = summary?.payments?.paid_units          ?? 0
   const totalUnits     = summary?.units?.total                  ?? 0
-  const outstanding    = summary?.financials?.agent_earnings    ?? 0   // units outstanding
-  const collRate       = totalUnits > 0 ? Math.round((paidUnits / totalUnits) * 100) : 0
+    const collRate       = totalUnits > 0 ? Math.round((paidUnits / totalUnits) * 100) : 0
 
   // breakdown counts — use what the API returns or derive
   const paid    = paidUnits
@@ -309,7 +307,7 @@ export default function DashboardPage() {
                 <h3 className="text-sm font-semibold text-slate-900">Rent breakdown</h3>
                 <span className="text-xs text-slate-400">{totalUnits - vacant} occupied</span>
               </div>
-              <DonutChart paid={paid} partial={partial} overdue={overdue} vacant={vacant} total={totalUnits}/>
+              <DonutChart paid={paid} partial={partial} overdue={overdue} total={totalUnits}/>
               <div className="space-y-0">
                 {[
                   { label: 'Fully paid',      count: paid,    color: '#22C55E' },
