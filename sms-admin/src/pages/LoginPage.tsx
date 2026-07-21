@@ -13,7 +13,7 @@ export function LoginPage() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  if (isAuthenticated() && user?.role === 'admin') return <Navigate to="/" replace />
+  if (isAuthenticated() && (user?.role === 'admin' || user?.role === 'super_admin')) return <Navigate to="/" replace />
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,7 +21,7 @@ export function LoginPage() {
     try {
       const res = await authApi.login(email, password)
       const { accessToken, user } = res.data.data
-      if (user.role !== 'admin') { toast.error('Access denied — admin accounts only'); return }
+      if (user.role !== 'admin' && user.role !== 'super_admin') { toast.error('Access denied — admin accounts only'); return }
       setAuth(user, accessToken)
       navigate('/')
     } catch (err: any) {

@@ -6,7 +6,7 @@ import { useAuthStore } from '../../hooks/useAuth'
 export function AppLayout() {
   const { isAuthenticated, user } = useAuthStore()
   if (!isAuthenticated()) return <Navigate to="/login" replace />
-  if (user?.role !== 'admin') return <Navigate to="/login" replace />
+  if (user?.role !== 'admin' && user?.role !== 'super_admin') return <Navigate to="/login" replace />
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
