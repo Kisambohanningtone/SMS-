@@ -2,6 +2,7 @@ export enum UserRole {
   AGENT = 'agent',
   OWNER = 'owner',
   ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin',
 }
 
 export interface JwtPayload {

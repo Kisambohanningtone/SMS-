@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { authenticate } from '@middleware/authenticate'
-import { requireAdmin } from '@middleware/role'
+import { requireAdmin, requireSuperAdmin } from '@middleware/role'
 import {
   getPlatformSummary, getDashboardStats, getRecentActivity,
   listAgents, getAgentProfile, getAgentCommission,
@@ -29,7 +29,7 @@ router.post('/agents/:agentId/reset-password', resetAgentPassword)
 
 // Users search
 router.get('/users/search', searchUsers)
-router.post('/register-admin', registerAdmin)
+router.post('/register-admin', requireSuperAdmin, registerAdmin)
 router.get('/owners', listOwners)
 
 // Payments
