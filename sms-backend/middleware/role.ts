@@ -19,6 +19,6 @@ export function requireRole(...roles: UserRole[]) {
 }
 
 export const requireAgent = requireRole(UserRole.AGENT)
-export const requireAdmin = requireRole(UserRole.ADMIN)
+export const requireAdmin = requireRole(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export const requireSuperAdmin = requireRole(UserRole.SUPER_ADMIN)
 export const requireAgentOrAdmin = requireRole(UserRole.AGENT, UserRole.ADMIN)
