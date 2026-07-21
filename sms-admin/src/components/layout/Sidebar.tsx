@@ -63,11 +63,11 @@ export function Sidebar() {
       </nav>
 
       <div className="px-3 pb-2">
-        <NavLink to="/register-admin"
+        {user?.role === 'super_admin' && <NavLink to="/register-admin"
           className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-amber-400 hover:bg-white/5 transition-colors border border-amber-500/20 hover:border-amber-500/40">
           <UserPlus size={15} />
           <span>Add Admin</span>
-        </NavLink>
+        </NavLink>}
       </div>
       <div className="px-4 pb-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600/10 border border-indigo-500/20">

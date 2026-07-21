@@ -16,7 +16,7 @@ export function RegisterAdminPage() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  if (!isAuthenticated() || (user?.role !== 'admin' && user?.role !== 'super_admin')) return <Navigate to="/login" replace />
+  if (!isAuthenticated() || user?.role !== 'super_admin') return <Navigate to="/" replace />
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
