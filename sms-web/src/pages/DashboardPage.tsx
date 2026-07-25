@@ -142,7 +142,6 @@ export default function DashboardPage() {
 
   // ── derived figures from PaymentSummary shape ──
   const totalCollected = summary?.financials?.gross_collected   ?? 0
-  const walternFee     = summary?.financials?.waltern_fee       ?? 0
   const paidUnits      = summary?.payments?.paid_units          ?? 0
   const totalUnits     = summary?.units?.total                  ?? 0
     const collRate       = totalUnits > 0 ? Math.round((paidUnits / totalUnits) * 100) : 0
@@ -201,11 +200,11 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between relative z-10">
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-white/50 mb-2">
-                Waltern Tech Commission · {monthLabel()}
+                Rent Collection · {monthLabel()}
               </p>
-              <p className="text-4xl font-extrabold text-white mb-1">{kes(walternFee)}</p>
+              <p className="text-4xl font-extrabold text-white mb-1">{kes(totalCollected)}</p>
               <p className="text-xs text-white/60">
-                0.5% of {kes(totalCollected)} collected across {properties.length} {properties.length === 1 ? 'property' : 'properties'}
+                Total rent collected across {properties.length} {properties.length === 1 ? 'property' : 'properties'}
               </p>
               <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-medium text-white/90"
                 style={{ background: 'rgba(255,255,255,0.12)' }}>
@@ -239,7 +238,7 @@ export default function DashboardPage() {
             { icon: <Building2 size={16} className="text-blue-600"/>,  bg: 'bg-blue-50',   val: properties.length,       label: 'Properties',      sub: `${totalUnits} total units`           },
             { icon: <Wallet    size={16} className="text-green-600"/>, bg: 'bg-green-50',  val: kes(totalCollected),     label: 'Rent collected',  sub: `of ${kes(totalExpected)} expected`   },
             { icon: <Users     size={16} className="text-orange-500"/>,bg: 'bg-orange-50', val: kes(totalExpected - totalCollected), label: 'Outstanding', sub: `${overdue} units overdue`  },
-            { icon: <TrendingUp size={16} className="text-purple-600"/>,bg:'bg-purple-50', val: kes(walternFee),          label: 'Commission',      sub: '0.5% auto-split'                     },
+            { icon: <TrendingUp size={16} className="text-purple-600"/>,bg:'bg-purple-50', val: `${collRate}%`,          label: 'Collection rate', sub: `${paidUnits} units fully paid`          },
           ].map(({ icon, bg, val, label, sub }) => (
             <div key={label} className="bg-white border border-slate-200 rounded-xl p-4">
               <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center mb-3`}>{icon}</div>
@@ -353,7 +352,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-semibold text-slate-900">{kes(p.gross_amount)}</p>
-                      <p className="text-[10px] text-purple-600 font-medium mt-0.5">+{kes(p.waltern_fee)} → Waltern</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{p.payment_method}</p>
                     </div>
                   </div>
                 ))
