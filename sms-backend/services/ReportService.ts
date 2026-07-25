@@ -113,7 +113,8 @@ export class ReportService {
       { expiresIn: '30d' }
     )
 
-    // ── Save report ──────────────────────────────────────────────────────────
+    // ── Save report (Bug 3.9 fix: DELETE + INSERT so figures always reflect live data)
+    await OwnerReport.destroy({ where: { property_id: property.id, month, year } })
     const report = await OwnerReport.create({
       property_id: property.id,
       month,

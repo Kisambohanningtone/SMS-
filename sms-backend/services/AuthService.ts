@@ -53,7 +53,9 @@ export class AuthService {
     return this._buildLoginResult(user, agent.id)
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(rawEmail: string, password: string): Promise<LoginResult> {
+    // PRD 3.10 fix: normalise email before any comparison
+    const email = rawEmail.toLowerCase().trim()
     const user = await User.findOne({
       where: { email: email.toLowerCase().trim() },
       include: [{ model: Agent, as: 'agent' }],
@@ -157,13 +159,13 @@ export class AuthService {
    */
   async registerAdmin(dto: { full_name: string; email: string; password: string; phone?: string }): Promise<{ id: string; full_name: string; email: string; role: string }> {
     const bcrypt = require('bcrypt')
-    const existing = await User.findOne({ where: { email: dto.email } })
+    const existing = await User.findOne({ where: { email: dto.email.toLowerCase().trim() } })
     if (existing) throw new AppError('Email already registered', 409)
     if (dto.password.length < 8) throw new AppError('Password must be at least 8 characters', 400)
     const password_hash = await bcrypt.hash(dto.password, 12)
     const user = await User.create({
       full_name: dto.full_name,
-      email: dto.email,
+      email: dto.email.toLowerCase().trim(),
       phone: dto.phone ?? null,
       password_hash,
       role: UserRole.ADMIN,
