@@ -52,9 +52,9 @@ function AddTenantModal({ onClose }: { onClose: () => void }) {
       unit_id: unitId,
       full_name: fullName,
       phone,
-      national_id: nationalId || undefined,
+      national_id: nationalId,
       lease_start: leaseStart,
-      deposit_amount: depositAmount ? Number(depositAmount) : undefined,
+      deposit_amount: Number(depositAmount),
     }),
     onSuccess: (res: any) => {
       const tempPw = res.data?.temporaryPassword
@@ -79,7 +79,13 @@ function AddTenantModal({ onClose }: { onClose: () => void }) {
     onError: (err: any) => toast.error(err.response?.data?.message ?? 'Failed to add tenant'),
   })
 
-  const canSubmit = unitId && fullName && phone && leaseStart
+  // PRD 3.5 + 3.6: deposit, national_id, phone are all required
+  const E164 = /^\+[1-9]\d{7,14}$/
+  const NAME_REGEX = /^[A-Za-z\u00C0-\u024F' -]+$/
+  const phoneValid = E164.test(phone)
+  const nameValid = NAME_REGEX.test(fullName)
+  const depositValid = Number(depositAmount) > 0
+  const canSubmit = unitId && fullName && nameValid && phone && phoneValid && leaseStart && nationalId && depositValid
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -110,17 +116,38 @@ function AddTenantModal({ onClose }: { onClose: () => void }) {
 
           <div>
             <label className="label">Tenant full name</label>
-            <input className="input" placeholder="Test Tenant" value={fullName} onChange={e => setFullName(e.target.value)} />
+            <input
+                className={`input ${fullName && !nameValid ? 'border-red-400' : ''}`}
+                placeholder="Jane Wanjiku"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+              />
+              {fullName && !nameValid && (
+                <p className="text-xs text-red-500 mt-1">Name must contain letters only</p>
+              )}
           </div>
 
           <div>
             <label className="label">Phone number</label>
-            <input className="input" placeholder="254708374149" value={phone} onChange={e => setPhone(e.target.value)} />
+            <input
+                className={`input ${phone && !phoneValid ? 'border-red-400' : ''}`}
+                placeholder="+254700000000"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+              />
+              {phone && !phoneValid && (
+                <p className="text-xs text-red-500 mt-1">Use E.164 format: +254700000000</p>
+              )}
           </div>
 
           <div>
             <label className="label">National ID (optional)</label>
-            <input className="input" placeholder="12345678" value={nationalId} onChange={e => setNationalId(e.target.value)} />
+            <input
+                className={`input ${!nationalId && fullName ? 'border-amber-400' : ''}`}
+                placeholder="e.g. 12345678 (required)"
+                value={nationalId}
+                onChange={e => setNationalId(e.target.value)}
+              />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -130,7 +157,17 @@ function AddTenantModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <label className="label">Deposit (KES, optional)</label>
-              <input type="number" className="input" placeholder="0" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
+              <input
+                  type="number"
+                  className={`input ${depositAmount && !depositValid ? 'border-red-400' : ''}`}
+                  placeholder="e.g. 5000 (required)"
+                  min="1"
+                  value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                />
+                {depositAmount && !depositValid && (
+                  <p className="text-xs text-red-500 mt-1">Deposit must be greater than 0</p>
+                )}
             </div>
           </div>
         </div>
