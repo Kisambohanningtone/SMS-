@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FileText, Plus, X, Loader2, Send, CheckCircle2, ExternalLink, Building2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import ReportPreviewModal from '../components/ReportPreviewModal'
 import { reportsApi, type OwnerReport } from '../api/reports'
 import { propertiesApi } from '../api/properties'
 
@@ -69,14 +70,14 @@ function GenerateReportModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
+
     </div>
   )
 }
 
-function ReportCard({ report }: { report: OwnerReport }) {
+function ReportCard({ report, onPreview }: { report: OwnerReport; onPreview: (id: string) => void }) {
   const queryClient = useQueryClient()
   const monthName = new Date(report.year, report.month - 1).toLocaleString('en-KE', { month: 'long', year: 'numeric' })
-  const portalUrl = '/owner/report/' + report.owner_token
 
   const deleteReport = useMutation({
     mutationFn: () => reportsApi.delete(report.id),
@@ -149,17 +150,12 @@ function ReportCard({ report }: { report: OwnerReport }) {
       </div>
 
       <div className="flex gap-2">
-        {report.owner_token && (
-          <a
-          
-            href={portalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-secondary text-xs flex-1 flex items-center justify-center gap-1.5"
-          >
-            <ExternalLink size={12} /> Preview
-          </a>
-        )}
+        <button
+          onClick={() => onPreview(report.id)}
+          className="btn-secondary text-xs flex-1 flex items-center justify-center gap-1.5"
+        >
+          <ExternalLink size={12} /> Preview
+        </button>
         <button
           onClick={() => { if (window.confirm('Delete this report?')) deleteReport.mutate() }}
           disabled={deleteReport.isPending}
@@ -182,6 +178,21 @@ function ReportCard({ report }: { report: OwnerReport }) {
 }
 
 export function ReportsPage() {
+  const queryClient = useQueryClient()
+  const [previewReport, setPreviewReport] = useState<import('../api/reports').ReportPreview | null>(null)
+  const [_loadingPreview, setLoadingPreview] = useState<string | null>(null)
+
+  async function handlePreview(reportId: string) {
+    setLoadingPreview(reportId)
+    try {
+      const res = await reportsApi.preview(reportId)
+      setPreviewReport(res.data.data)
+    } catch (err: any) {
+      toast.error(err.response?.data?.message ?? 'Failed to load preview')
+    } finally {
+      setLoadingPreview(null)
+    }
+  }
   const [showModal, setShowModal] = useState(false)
 
   const { data, isLoading } = useQuery({
@@ -215,11 +226,18 @@ export function ReportsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reports.map(r => <ReportCard key={r.id} report={r} />)}
+          {reports.map(r => <ReportCard key={r.id} report={r} onPreview={handlePreview} />)}
         </div>
       )}
 
       {showModal && <GenerateReportModal onClose={() => setShowModal(false)} />}
+      {previewReport && (
+        <ReportPreviewModal
+          report={previewReport}
+          onClose={() => setPreviewReport(null)}
+          onSent={() => queryClient.invalidateQueries({ queryKey: ['reports'] })}
+        />
+      )}
     </div>
   )
 }

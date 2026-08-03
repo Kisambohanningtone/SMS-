@@ -348,4 +348,18 @@ export class ReportService {
     logger.info('Report deleted — reportId: ' + reportId)
   }
 
+  /** Get single report by ID — for preview modal (PRD 3.2) */
+  async getById(reportId: string, agentId: string) {
+    const OwnerReport = (await import('@models/index')).OwnerReport as any
+    const Property    = (await import('@models/index')).Property as any
+    const Owner       = (await import('@models/index')).Owner as any
+    return OwnerReport.findOne({
+      where: { id: reportId, agent_id: agentId },
+      include: [
+        { model: Property, as: 'property', attributes: ['id', 'name', 'location'] },
+        { model: Owner,    as: 'owner',    attributes: ['id', 'full_name', 'phone', 'email'] },
+      ],
+    })
+  }
+
 }

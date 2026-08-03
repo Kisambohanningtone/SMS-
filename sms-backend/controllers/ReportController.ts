@@ -63,3 +63,52 @@ export async function deleteReport(req: Request, res: Response, next: NextFuncti
     res.json({ success: true, message: 'Report deleted' })
   } catch (err) { next(err) }
 }
+
+/**
+ * GET /api/reports/:id/preview — PRD 3.2
+ * Returns computed report figures for preview modal.
+ * Does NOT generate PDF or send WhatsApp — preview only.
+ */
+export async function previewReport(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const report = await svc.getById(req.params.id, req.user!.agentId!)
+    if (!report) {
+      res.status(404).json({ success: false, message: 'Report not found' })
+      return
+    }
+    res.json({
+      success: true,
+      data: {
+        id: report.id,
+        property: {
+          id: report.property?.id,
+          name: report.property?.name,
+          location: report.property?.location,
+        },
+        owner: {
+          full_name: report.owner?.full_name,
+          phone: report.owner?.phone,
+          email: report.owner?.email,
+        },
+        period: {
+          month: report.month,
+          year: report.year,
+          label: new Date(report.year, report.month - 1)
+            .toLocaleString('en-KE', { month: 'long', year: 'numeric' }),
+        },
+        financials: {
+          total_expected:   report.total_expected,
+          total_collected:  report.total_collected,
+          waltern_fee:      report.waltern_fee_total,
+          agent_fee:        report.agent_fee_amount,
+          maintenance:      report.maintenance_total,
+          net_to_owner:     report.net_to_owner,
+          collection_rate:  report.collection_rate,
+        },
+        pdf_url:   report.pdf_url,
+        sent_at:   report.sent_at,
+        createdAt: report.created_at,
+      },
+    })
+  } catch (err) { next(err) }
+}

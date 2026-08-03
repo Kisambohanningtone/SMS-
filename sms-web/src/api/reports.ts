@@ -19,6 +19,21 @@ export interface OwnerReport {
   property?: { id: string; name: string; location: string }
 }
 
+export interface ReportPreview {
+  id: string
+  property: { id: string; name: string; location: string }
+  owner: { full_name: string; phone: string; email: string | null }
+  period: { month: number; year: number; label: string }
+  financials: {
+    total_expected: number; total_collected: number
+    waltern_fee: number; agent_fee: number
+    maintenance: number; net_to_owner: number; collection_rate: number
+  }
+  pdf_url: string | null
+  sent_at: string | null
+  createdAt: string
+}
+
 export const reportsApi = {
   list: (filters?: { propertyId?: string; month?: string; year?: string }) =>
     api.get<{ success: boolean; data: OwnerReport[] }>('/api/reports', { params: filters }),
@@ -26,6 +41,8 @@ export const reportsApi = {
     api.post<{ success: boolean; data: OwnerReport }>('/api/reports/generate', { propertyId, monthYear }),
   delete: (reportId: string) =>
     api.delete<{ success: boolean }>('/api/reports/' + reportId),
+  preview: (id: string) =>
+    api.get<{ success: boolean; data: ReportPreview }>(`/api/reports/${id}/preview`),
   send: (reportId: string) =>
     api.post<{ success: boolean; data: unknown }>(`/api/reports/${reportId}/send`),
 }
