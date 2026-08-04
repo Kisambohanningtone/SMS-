@@ -79,6 +79,10 @@ export const env = {
     paybillAccount: optional('WALTERN_PAYBILL_ACCOUNT', '1740187161848'),
   },
 
+  google: {
+    clientId:     process.env.GOOGLE_CLIENT_ID ?? '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+  },
   africastalking: {
     apiKey: optional('AT_API_KEY', ''),
     username: optional('AT_USERNAME', 'sandbox'),

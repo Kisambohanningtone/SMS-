@@ -150,3 +150,32 @@ export async function tenantPayRent(req: Request, res: Response, next: NextFunct
     res.json({ success: true, data })
   } catch (err) { next(err) }
 }
+
+// ─── PRD 3.1 — Document upload ─────────────────────────────────────────────
+import { DocumentService } from '@services/DocumentService'
+const docSvc = new DocumentService()
+
+export async function uploadDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.file) {
+      res.status(400).json({ success: false, message: 'No file uploaded' })
+      return
+    }
+    const result = await docSvc.upload({
+      tenantId:     req.params.id,
+      uploadedBy:   req.user!.id,
+      fileBuffer:   req.file.buffer,
+      originalName: req.file.originalname,
+      mimeType:     req.file.mimetype,
+      documentType: req.body.documentType ?? 'lease',
+    })
+    res.status(201).json({ success: true, data: result })
+  } catch (err) { next(err) }
+}
+
+export async function getDocuments(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await docSvc.list(req.params.id)
+    res.json({ success: true, data })
+  } catch (err) { next(err) }
+}

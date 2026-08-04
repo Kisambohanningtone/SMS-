@@ -1,9 +1,11 @@
+import multer from 'multer'
 import { Router } from 'express'
 import { authenticate } from '@middleware/authenticate'
 import { validate } from '@middleware/validate'
 import {
   listTenants, createTenant, getTenant,
-  updateTenant, deactivateTenant
+  updateTenant, deactivateTenant,
+  uploadDocument, getDocuments
 } from '@controllers/TenantController'
 import Joi from 'joi'
 
@@ -50,6 +52,8 @@ const updateTenantSchema = Joi.object({
   deposit_paid:   Joi.boolean().optional(),
 })
 
+// PRD 3.8 — search by q, sort by lease_start, filter by date range
+// GET /api/tenants?q=jane&sort=lease_start&order=desc&leaseFrom=2026-01-01&leaseTo=2026-12-31
 router.get('/',         listTenants)
 router.post('/',        validate(createTenantSchema),  createTenant)
 router.get('/:id',      getTenant)
@@ -57,3 +61,23 @@ router.patch('/:id',    validate(updateTenantSchema),  updateTenant)
 router.delete('/:id',   deactivateTenant)
 
 export default router
+
+// PRD 3.1 — lease document upload
+router.get('/:id/documents', getDocuments)
+router.post('/:id/documents', uploadDocument)
+
+// PRD 3.1 — file upload middleware (memory storage — max 10MB)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+
+// Override the uploadDocument route to use multer
+router.post('/:id/documents', upload.single('file'), uploadDocument)
+router.get('/documents/:docId/serve', async (req, res, next) => {
+  try {
+    const { DocumentService } = await import('@services/DocumentService')
+    const svc = new DocumentService()
+    const { buffer, mimeType, filename } = await svc.serve(req.params.docId, req.query.token as string)
+    res.setHeader('Content-Type', mimeType)
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`)
+    res.send(buffer)
+  } catch (err) { next(err) }
+})

@@ -62,3 +62,19 @@ export async function registerAdmin(req: import('express').Request, res: import(
     res.status(201).json({ success: true, data })
   } catch (err) { next(err) }
 }
+
+// PRD 3.11 — Google Sign-In
+import { GoogleAuthService } from '@services/GoogleAuthService'
+const googleSvc = new GoogleAuthService()
+
+export async function googleAuth(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction): Promise<void> {
+  try {
+    const { idToken } = req.body
+    if (!idToken) {
+      res.status(400).json({ success: false, message: 'Google ID token is required' })
+      return
+    }
+    const result = await googleSvc.authenticate(idToken)
+    res.json({ success: true, data: result })
+  } catch (err) { next(err) }
+}

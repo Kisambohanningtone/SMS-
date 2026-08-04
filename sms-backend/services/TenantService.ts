@@ -45,6 +45,24 @@ export class TenantService {
     const unitIds = agentUnits.map((u) => u.id)
     const where: Record<string, unknown> = { unit_id: unitIds }
     if (filters.isActive !== undefined) where['is_active'] = filters.isActive === 'true'
+    // PRD 3.8 — full-text search
+    if (filters.q) {
+      const { Op } = await import('sequelize')
+      const q = `%${filters.q}%`
+      where[Op.or as unknown as string] = [
+        { full_name:   { [Op.iLike]: q } },
+        { phone:       { [Op.iLike]: q } },
+        { national_id: { [Op.iLike]: q } },
+      ]
+    }
+    // PRD 3.8 — filter by lease_start date range
+    if (filters.leaseFrom || filters.leaseTo) {
+      const { Op } = await import('sequelize')
+      const dateFilter: Record<symbol, Date> = {}
+      if (filters.leaseFrom) dateFilter[Op.gte] = new Date(filters.leaseFrom as string)
+      if (filters.leaseTo)   dateFilter[Op.lte] = new Date(filters.leaseTo as string)
+      where['lease_start'] = dateFilter
+    }
     return Tenant.findAll({
       where,
       attributes: { exclude: ["password_hash"] },
