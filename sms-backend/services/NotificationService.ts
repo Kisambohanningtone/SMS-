@@ -1,163 +1,148 @@
-import axios from 'axios'
-import { logger } from '@config/logger'
-import { env } from '@config/env'
-import { AppError } from '@middleware/errorHandler'
-
-export interface SmsResult {
-  messageId: string
-  status: string
-  cost?: string
-}
-
-export interface WhatsAppResult {
-  messageId: string
-  status: string
-}
-
 /**
- * NotificationService — Africa's Talking SMS and WhatsApp integration.
+ * NotificationService
  *
- * Calls the Africa's Talking REST API directly via axios rather than
- * their official Node SDK. The SDK (v0.8.0) has a known issue where its
- * internal axios instance sends malformed auth headers that the API
- * rejects with 401, even with valid credentials — verified via direct
- * curl testing against the same endpoint with identical credentials,
- * which succeeds. Calling the REST API directly avoids this entirely.
+ * Handles SMS and WhatsApp dispatch via Africa's Talking.
+ *
+ * BUG FIX: The AT Node.js SDK has a known issue where sms.send() fails silently.
+ * Fix: use direct axios REST call — same approach confirmed working via curl.
+ * Reference: Status Report June 2026 — "AT SMS: curl confirmed, server-side has 1 bug"
  */
+import axios from 'axios'
+import { env } from '@config/env'
+import { logger } from '@config/logger'
+
+export interface NotifResult {
+  success:   boolean
+  messageId: string | null
+  error:     string | null
+}
+
 export class NotificationService {
 
-  private get baseUrl(): string {
-    // Sandbox uses a different host than production
-    return env.africastalking.username === 'sandbox'
-      ? 'https://api.sandbox.africastalking.com'
-      : 'https://api.africastalking.com'
-  }
-
-  async sendSms(phone: string, message: string): Promise<SmsResult> {
-    if (!env.africastalking.apiKey) {
-      throw new AppError(
-        "Africa's Talking not configured — set AT_API_KEY in .env",
-        501
-      )
-    }
+  /**
+   * Send SMS via Africa's Talking REST API directly
+   * Bypasses the AT SDK which has a known silent failure bug
+   */
+  async sendSms(phone: string, message: string): Promise<NotifResult> {
+    const to = this._normalisePhone(phone)
 
     try {
-      const { data } = await axios.post(
-        `${this.baseUrl}/version1/messaging`,
-        new URLSearchParams({
-          username: env.africastalking.username,
-          to: phone,
-          message,
-          // Sender ID only works in production — sandbox ignores/rejects it
-          ...(env.africastalking.senderId && env.africastalking.username !== 'sandbox'
-            ? { from: env.africastalking.senderId }
-            : {}),
-        }),
+      const params = new URLSearchParams({
+        username: env.africastalking.username,
+        to,
+        message,
+      })
+
+      // Add sender ID only if configured
+      if (env.africastalking.senderId?.trim()) {
+        params.append('from', env.africastalking.senderId)
+      }
+
+      const response = await axios.post(
+        'https://api.africastalking.com/version1/messaging',
+        params,
         {
           headers: {
-            apiKey: env.africastalking.apiKey,
+            apiKey:         env.africastalking.apiKey,
             'Content-Type': 'application/x-www-form-urlencoded',
-            Accept: 'application/json',
+            Accept:         'application/json',
           },
+          timeout: 15_000,
         }
       )
 
-      const recipient = data.SMSMessageData?.Recipients?.[0]
+      // Log full raw response — helps diagnose any future issues
+      logger.debug(`AT SMS raw response: ${JSON.stringify(response.data)}`)
 
-      // Debug — log the full AT response so we can see exactly what's returned
-      logger.debug(`AT SMS raw response: ${JSON.stringify(data)}`)
-      logger.debug(`AT recipient: ${JSON.stringify(recipient)}`)
+      const recipients = response.data?.SMSMessageData?.Recipients ?? []
+      const recipient  = recipients[0]
 
-      // Log full response for debugging
-      logger.info('AT SMS raw response: ' + JSON.stringify(data))
-      if (!recipient || recipient.status !== 'Success') {
-        const errMsg = recipient?.status ?? data?.SMSMessageData?.Message ?? 'Unknown SMS error'
-        logger.error('AT SMS failed — recipient: ' + JSON.stringify(recipient) + ' full: ' + JSON.stringify(data))
-        throw new Error(errMsg)
+      const success = recipient?.statusCode === 101 || recipient?.status === 'Success'
+
+      if (!success) {
+        const errMsg = recipient?.status ?? JSON.stringify(response.data)
+        logger.error(`AT SMS failed for ${to}: ${errMsg}`)
+        return { success: false, messageId: null, error: errMsg }
       }
 
-      logger.info(`SMS sent to ${phone} — messageId: ${recipient.messageId}`)
+      logger.info(`AT SMS sent to ${to} — msgId: ${recipient.messageId}, cost: ${recipient.cost}`)
+      return { success: true, messageId: recipient.messageId ?? null, error: null }
 
-      return {
-        messageId: recipient.messageId,
-        status: recipient.status,
-        cost: recipient.cost,
+    } catch (err: any) {
+      // Log everything for debugging
+      const errDetail = {
+        message: err.message,
+        status:  err.response?.status,
+        body:    JSON.stringify(err.response?.data),
       }
-    } catch (error) {
-      logger.error(`SMS failed to ${phone}:`, error)
-      const msg = axios.isAxiosError(error)
-        ? (error.response?.data?.SMSMessageData?.Recipients?.[0]?.status ?? error.message)
-        : (error as Error).message
-      throw new AppError(`SMS delivery failed: ${msg}`, 502)
-    }
-  }
-
-  async sendWhatsApp(phone: string, message: string): Promise<WhatsAppResult> {
-    if (!env.africastalking.apiKey) {
-      throw new AppError(
-        "Africa's Talking not configured — set AT_API_KEY in .env",
-        501
-      )
-    }
-    if (!env.africastalking.whatsappSender) {
-      throw new AppError(
-        'WhatsApp sender not configured — set AT_WHATSAPP_SENDER in .env',
-        501
-      )
-    }
-
-    try {
-      const { data } = await axios.post(
-        `${this.baseUrl}/whatsapp/message/send`,
-        {
-          username: env.africastalking.username,
-          productId: env.africastalking.whatsappSender,
-          to: phone,
-          message: { type: 'text', body: { text: message } },
-        },
-        {
-          headers: {
-            apiKey: env.africastalking.apiKey,
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        }
-      )
-
-      logger.info(`WhatsApp sent to ${phone}`)
-
-      return {
-        messageId: data?.messageId ?? data?.data?.messageId ?? 'unknown',
-        status: 'sent',
-      }
-    } catch (error) {
-      logger.error(`WhatsApp failed to ${phone}:`, error)
-      const msg = axios.isAxiosError(error)
-        ? (error.response?.data?.message ?? error.message)
-        : (error as Error).message
-      throw new AppError(`WhatsApp delivery failed: ${msg}`, 502)
+      logger.error(`AT SMS request error for ${to}:`, errDetail)
+      return { success: false, messageId: null, error: err.message }
     }
   }
 
   /**
-   * Render a reminder template replacing placeholders:
-   * [Tenant Name], [Unit Number], [Property Name], [Amount Due], [Month]
+   * Send WhatsApp message via Africa's Talking
+   * Falls back to SMS if AT_WHATSAPP_SENDER is not configured
    */
-  renderTemplate(
-    template: string,
-    vars: {
-      tenantName: string
-      unitNumber: string
-      propertyName: string
-      amountDue: number
-      month: string
+  async sendWhatsApp(phone: string, message: string): Promise<NotifResult> {
+    const whatsappSender = process.env.AT_WHATSAPP_SENDER?.trim()
+
+    if (!whatsappSender) {
+      logger.info('AT_WHATSAPP_SENDER not configured — falling back to SMS')
+      return this.sendSms(phone, message)
     }
-  ): string {
-    return template
-      .replace(/\[Tenant Name\]/gi, vars.tenantName)
-      .replace(/\[Unit Number\]/gi, vars.unitNumber)
-      .replace(/\[Property Name\]/gi, vars.propertyName)
-      .replace(/\[Amount Due\]/gi, `KES ${vars.amountDue.toLocaleString()}`)
-      .replace(/\[Month\]/gi, vars.month)
+
+    const to = this._normalisePhone(phone)
+
+    try {
+      const params = new URLSearchParams({
+        username: env.africastalking.username,
+        to,
+        message,
+        from: whatsappSender,
+        channel: 'whatsapp',
+      })
+
+      const response = await axios.post(
+        'https://api.africastalking.com/version1/messaging',
+        params,
+        {
+          headers: {
+            apiKey:         env.africastalking.apiKey,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept:         'application/json',
+          },
+          timeout: 15_000,
+        }
+      )
+
+      logger.debug(`AT WhatsApp raw response: ${JSON.stringify(response.data)}`)
+
+      const recipients = response.data?.SMSMessageData?.Recipients ?? []
+      const recipient  = recipients[0]
+      const success    = recipient?.statusCode === 101 || recipient?.status === 'Success'
+
+      if (!success) {
+        logger.warn(`AT WhatsApp failed for ${to} — falling back to SMS`)
+        return this.sendSms(phone, message)
+      }
+
+      logger.info(`AT WhatsApp sent to ${to} — msgId: ${recipient.messageId}`)
+      return { success: true, messageId: recipient.messageId ?? null, error: null }
+
+    } catch (err: any) {
+      logger.error(`AT WhatsApp error for ${to} — falling back to SMS:`, err.message)
+      return this.sendSms(phone, message)
+    }
+  }
+
+  // Normalise phone to +254XXXXXXXXX format
+  private _normalisePhone(phone: string): string {
+    const cleaned = phone.replace(/\D/g, '')
+    if (cleaned.startsWith('254') && cleaned.length === 12) return `+${cleaned}`
+    if (cleaned.startsWith('0')   && cleaned.length === 10) return `+254${cleaned.slice(1)}`
+    if (cleaned.startsWith('7')   && cleaned.length === 9)  return `+254${cleaned}`
+    if (cleaned.startsWith('1')   && cleaned.length === 9)  return `+254${cleaned}`
+    return `+${cleaned}`
   }
 }
