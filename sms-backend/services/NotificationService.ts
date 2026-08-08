@@ -136,6 +136,18 @@ export class NotificationService {
     }
   }
 
+  /** Render reminder template with tenant data */
+  renderTemplate(template: string, vars: Record<string, string>): string {
+    return template
+      .replace(/\[Tenant Name\]/g,    vars.tenantName    ?? '')
+      .replace(/\[Rent Amount\]/g,    vars.rentAmount    ?? '')
+      .replace(/\[Unit Number\]/g,    vars.unitNumber    ?? '')
+      .replace(/\[Property Name\]/g,  vars.propertyName  ?? '')
+      .replace(/\[Till Number\]/g,    vars.tillNumber    ?? '')
+      .replace(/\[Agent Name\]/g,     vars.agentName     ?? '')
+      .replace(/\[Balance\]/g,        vars.balance       ?? '')
+  }
+
   // Normalise phone to +254XXXXXXXXX format
   private _normalisePhone(phone: string): string {
     const cleaned = phone.replace(/\D/g, '')

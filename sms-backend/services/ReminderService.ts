@@ -83,7 +83,7 @@ export class ReminderService {
         tenantName: tenant.full_name,
         unitNumber: unit.unit_number,
         propertyName: property.name,
-        amountDue: rentDue,
+        amountDue: String(rentDue),
         month: monthName,
       })
 
